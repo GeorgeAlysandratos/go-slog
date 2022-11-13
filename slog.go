@@ -10,6 +10,9 @@ import(
 )
 
 func Show(enable bool) {
+	file_lock.Lock()
+	defer file_lock.Unlock()
+	
 	stdout_enabled = enable
 }
 
@@ -19,6 +22,10 @@ func SetBasename(name string) {
 
 func Info(entry string) {
 	log(info, entry, false)
+}
+
+func Note(entry string) {
+	log(note, entry, false)
 }
 
 func Warn(entry string) {
@@ -31,6 +38,10 @@ func Error(entry string) {
 
 func Infof(entry string) {
 	log(info, entry, true)
+}
+
+func Notef(entry string) {
+	log(note, entry, true)
 }
 
 func Warnf(entry string) {
@@ -53,8 +64,9 @@ type log_type int32
 
 const (
 	info log_type = 0
-	warn log_type = 1
-	error log_type = 2
+	note log_type = 1
+	warn log_type = 2
+	error log_type = 3
 )
 
 func init() {
@@ -80,6 +92,8 @@ func get_last_slash(a string) string {
 func get_color(t log_type) string {
 	if t == info {
 		return "\033[0;97m"
+	} else if t == note {
+		return "\033[1;96m"
 	} else if t == warn {
 		return "\033[1;93m"
 	} else if t == error {
@@ -109,7 +123,9 @@ func log(t log_type, entry string, file_loc bool) {
 	if now.Day() != file_day {
 		file_day = now.Day()
 		filename := fmt.Sprint(file_name, "_", now.Day(), "-", int(now.Month()), "-", now.Year(), ".txt")
-		file.Close()
+		if file != nil {
+			file.Close()
+		}
 
 		f, err := os.OpenFile(filename, os.O_RDWR | os.O_APPEND | os.O_CREATE, 0755)
 		if err == nil {
@@ -129,6 +145,8 @@ func log(t log_type, entry string, file_loc bool) {
 
 	if t == info {
 		out_str.WriteString("INFO")
+	} else if t == note {
+		out_str.WriteString("NOTE")
 	} else if t == warn {
 		out_str.WriteString("WARN")
 	} else if t == error {
