@@ -12,7 +12,7 @@ import(
 func Show(enable bool) {
 	file_lock.Lock()
 	defer file_lock.Unlock()
-	
+
 	stdout_enabled = enable
 }
 
@@ -20,36 +20,36 @@ func SetBasename(name string) {
 	file_name = name
 }
 
-func Info(entry string) {
-	log(info, entry, false)
+func Info(v... any) {
+	impl(info, false, v...)
 }
 
-func Note(entry string) {
-	log(note, entry, false)
+func Note(v... any) {
+	impl(note, false, v...)
 }
 
-func Warn(entry string) {
-	log(warn, entry, false)
+func Warn(v... any) {
+	impl(warn, false, v...)
 }
 
-func Error(entry string) {
-	log(error, entry, false)
+func Error(v... any) {
+	impl(error, false, v...)
 }
 
-func Infof(entry string) {
-	log(info, entry, true)
+func Infof(v... any) {
+	impl(info, true, v...)
 }
 
-func Notef(entry string) {
-	log(note, entry, true)
+func Notef(v... any) {
+	impl(note, true, v...)
 }
 
-func Warnf(entry string) {
-	log(warn, entry, true)
+func Warnf(v... any) {
+	impl(warn, true, v...)
 }
 
-func Errorf(entry string) {
-	log(error, entry, true)
+func Errorf(v... any) {
+	impl(error, true, v...)
 }
 
 // ----------------------------------------------
@@ -109,6 +109,18 @@ func reset_color() string {
 	return "\033[0m"
 }
 
+func impl(t log_type, with_file bool, v... any) {
+	pack := make([]string, len(v))
+	pack = pack[0:0]
+
+	for _, t := range v {
+		pack = append(pack, fmt.Sprint(t))
+	}
+
+	entry := strings.Join(pack, " ")
+	log(t, entry, with_file)
+}
+
 func log(t log_type, entry string, file_loc bool) {
 	out_str := strings.Builder{}
 	out_str.Grow(256)
@@ -158,7 +170,7 @@ func log(t log_type, entry string, file_loc bool) {
 	color_end = out_str.Len()
 
 	if file_loc {
-		_, file, line, ok := runtime.Caller(2)
+		_, file, line, ok := runtime.Caller(3)
 
 		out_str.WriteString(" [")
 
